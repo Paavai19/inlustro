@@ -1,18 +1,8 @@
-FROM node:18-alpine3.17 as build
+FROM maven:3.8.5-openjdk-17 AS build
+COPY . .
+RUN mvn clean package -DskipTests
 
-WORKDIR /app
-COPY . /app
-
-RUN npm i npm@latest -g
-RUN npm install
-RUN npm run build
-
-FROM ubuntu
-RUN apt-get update
-RUN apt-get install nginx -y
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /var/www/html/
-
-
-EXPOSE 80
-CMD ["nginx","-g","daemon off;"]
+FROM openjdk:17.0.1-jdk-slim
+COPY --from=build /target/quizspring-0.0.1-SNAPSHOT.jar quizapp.jar
+EXPOSE 7777
+ENTRYPOINT ["java","-jar","quizapp.jar"]
